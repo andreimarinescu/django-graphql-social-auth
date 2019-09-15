@@ -1,12 +1,47 @@
 import graphene
 
 from . import mixins, types
-from .decorators import social_auth
 
+from django.utils.translation import ugettext_lazy as _
 
-class SocialAuthMutation(mixins.SocialAuthMixin, graphene.Mutation):
+from social_core.exceptions import MissingBackend
+from social_django.utils import load_backend, load_strategy
+from social_django.views import _do_login
+
+from . import exceptions, mixins
+
+class PartialResult(graphene.ObjectType):
+    partial = graphene.Field(types.SocialPartialType)
+
+class LoginResult(graphene.ObjectType):
     social = graphene.Field(types.SocialType)
 
+class JWTResult(LoginResult):
+    token = graphene.String()
+
+class AbstractSocialAuthResult(graphene.Union):
+    class Meta:
+        abstract = True
+        types = [PartialResult, LoginResult, JWTResult]
+
+    @staticmethod
+    def resolve_type(obj, context, info):
+        return obj.__class__
+
+class SocialAuthResult(graphene.Union):
+    class Meta:
+        types = [PartialResult, LoginResult]
+
+    @staticmethod
+    def resolve_type(obj, context, info):
+        return obj.__class__
+
+class SocialAuthJWTResult(graphene.Union):
+    class Meta:
+        types = [PartialResult, LoginResult, JWTResult]
+
+class AbstractSocialAuthMutation(mgraphene.Mutation):
+    
     class Meta:
         abstract = True
 
@@ -15,14 +50,65 @@ class SocialAuthMutation(mixins.SocialAuthMixin, graphene.Mutation):
         access_token = graphene.String(required=True)
 
     @classmethod
-    @social_auth
-    def mutate(cls, root, info, social, **kwargs):
-        return cls.resolve(root, info, social, **kwargs)
+    def mutate(cls, root, info, provider, access_token, **kwargs):
+        strategy = load_strategy(info.context)
 
+        try:
+            backend = load_backend(strategy, provider, redirect_uri=None)
+        except MissingBackend:
+            raise exceptions.GraphQLSocialAuthError(_('Provider not found'))
 
-class SocialAuth(mixins.ResolveMixin, SocialAuthMutation):
+        if info.context.user.is_authenticated:
+            authenticated_user = info.context.user
+        else:
+            authenticated_user = None
+
+        user_or_partial = backend.do_auth(access_token, user=authenticated_user)
+
+        if user_or_partial is None:
+            raise exceptions.InvalidTokenError(_('Invalid token'))
+
+        user_model = strategy.storage.user.user_model()
+
+        if isinstance(user, PartialResponse):
+            return SocialAuthResult(
+                result=PartialResult(
+                    partial=user_or_partial.response)
+                )
+
+        elif not isinstance(user, user_model):
+            msg = _('`{}` is not a user instance').format(type(user).__name__)
+            raise exceptions.DoAuthError(msg, user)
+
+        if getattr(cls, 'do_login'):
+            ifresult = cls.do_login(backend, user)
+            if ifresult:
+               result = ifresult
+
+        return cls.ResultUnion(result=result)
+
+class SocialAuth(AbstractSocialAuthMutation):
     """Social Auth Mutation"""
 
+    ResultUnion = SocialAuthResult
 
-class SocialAuthJWT(mixins.JSONWebTokenMixin, SocialAuthMutation):
+    @classmethod
+    def do_login(backend, user)
+        _do_login(backend, user, user.social_user)
+        return LoginResult(social=user.social_user)
+
+
+class SocialAuthJWT(AbstractSocialAuthMutation):
     """Social Auth for JSON Web Token (JWT)"""
+
+    ResultUnion = SocialAuthJWTResult
+
+    @classmethod
+    def do_login(backend, user):
+        try:
+            from graphql_jwt.shortcuts import get_token
+        except ImportError:
+            raise ImportError(
+                'django-graphql-jwt not installed.\n'
+                'Use `pip install \'django-graphql-social-auth[jwt]\'`.')
+        return JWTResult(social=user.social_user, token=get_token(user))

@@ -24,3 +24,14 @@ class SocialType(DjangoObjectType):
     def resolve_extra_data(self, info, **kwargs):
         self.extra_data.pop('access_token', None)
         return self.extra_data
+
+
+class SocialPartialType(DjangoObjectType):
+    data = CamelJSON()
+
+    class Meta:
+        model = social_models.Partial
+
+    def resolve_data(self, info, **kwargs):
+        self.data.pop('token', None)
+        return self.data
