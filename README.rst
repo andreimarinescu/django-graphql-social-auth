@@ -136,7 +136,7 @@ Complete support for `Relay`_.
 .. code:: graphql
 
     mutation SocialAuth($provider: String!, $accessToken: String!) {
-      socialAuth(provider: $provider, accessToken: $accessToken) {
+      socialAuth(input:{provider: $provider, accessToken: $accessToken}) {
         result {
           __typename
           ... on Social {
