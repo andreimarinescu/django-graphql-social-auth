@@ -177,6 +177,11 @@ If you want to customize the ``SocialAuth`` behavior, you'll need to customize t
 
         result = graphene.Field(SocialAuthResult)
 
+      @classmethod
+      def get_loginresult(cls, backend, user):
+          _do_login(backend, user, user.social_user)
+          return cls.Social(user=user, social=user.social_user)
+
 Authenticate via *accessToken* to obtain the *user id*.
 
 .. code:: graphql

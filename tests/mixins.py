@@ -12,7 +12,6 @@ class SocialAuthMixin:
             'provider': 'google-oauth2',
             'accessToken': '-token-',
         })
-        print(response.data)
         social = response.data['socialAuth']['result']['social']
         self.assertEqual('test', social['uid'])
 
