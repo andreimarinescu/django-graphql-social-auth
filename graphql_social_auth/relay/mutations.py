@@ -1,30 +1,28 @@
 import graphene
 
 from . import nodes
-from .. import mixins, mutations
+from .. import mutations
 from ..decorators import social_auth
 
 
-class SocialAuthMutation(mixins.SocialAuthMixin,
-                         graphene.relay.ClientIDMutation):
+class AbstractSocialAuthMutation(graphene.relay.ClientIDMutation):
 
     social = graphene.Field(nodes.SocialNode)
 
     class Meta:
         abstract = True
 
-    class Input(mutations.SocialAuthMutation.Arguments):
+    class Input(mutations.SocialAuth.Arguments):
         """Social Auth Input"""
 
     @classmethod
-    @social_auth
-    def mutate_and_get_payload(cls, root, info, social, **kwargs):
-        return cls.resolve(root, info, social, **kwargs)
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        return mutations.SocialAuth.mutate(root, info, **kwargs)
 
 
-class SocialAuth(mixins.ResolveMixin, SocialAuthMutation):
+class SocialAuth(AbstractSocialAuthMutation):
     """Social Auth Mutation for Relay"""
 
 
-class SocialAuthJWT(mixins.JSONWebTokenMixin, SocialAuthMutation):
+class SocialAuthJWT(AbstractSocialAuthMutation):
     """Social Auth for JSON Web Token (JWT)"""

@@ -1,6 +1,5 @@
 import graphene
 
-from . import mixins, types
 
 from django.utils.translation import ugettext_lazy as _
 
@@ -8,21 +7,16 @@ from social_core.exceptions import MissingBackend
 from social_django.utils import load_backend, load_strategy
 from social_django.views import _do_login
 
-from . import exceptions, mixins
+from . import exceptions, results
 
-class PartialResult(graphene.ObjectType):
-    partial = graphene.Field(types.SocialPartialType)
-
-class LoginResult(graphene.ObjectType):
-    social = graphene.Field(types.SocialType)
-
-class JWTResult(LoginResult):
-    token = graphene.String()
+class PartialResponse(object):
+    response = None
+    def __init__(response):
+        self.response = response
 
 class AbstractSocialAuthResult(graphene.Union):
     class Meta:
         abstract = True
-        types = [PartialResult, LoginResult, JWTResult]
 
     @staticmethod
     def resolve_type(obj, context, info):
@@ -30,7 +24,7 @@ class AbstractSocialAuthResult(graphene.Union):
 
 class SocialAuthResult(graphene.Union):
     class Meta:
-        types = [PartialResult, LoginResult]
+        types = [results.PartialResult, results.SocialResult]
 
     @staticmethod
     def resolve_type(obj, context, info):
@@ -38,10 +32,10 @@ class SocialAuthResult(graphene.Union):
 
 class SocialAuthJWTResult(graphene.Union):
     class Meta:
-        types = [PartialResult, LoginResult, JWTResult]
+        types = [results.PartialResult, results.JWTResult]
 
-class AbstractSocialAuthMutation(mgraphene.Mutation):
-    
+class AbstractSocialAuthMutation(graphene.Mutation):
+
     class Meta:
         abstract = True
 
@@ -70,45 +64,55 @@ class AbstractSocialAuthMutation(mgraphene.Mutation):
 
         user_model = strategy.storage.user.user_model()
 
-        if isinstance(user, PartialResponse):
-            return SocialAuthResult(
-                result=PartialResult(
+        if isinstance(user_or_partial, PartialResponse):
+            return cls.classes().ResultUnion(
+                result=cls.classes().PartialResult(
                     partial=user_or_partial.response)
                 )
 
-        elif not isinstance(user, user_model):
-            msg = _('`{}` is not a user instance').format(type(user).__name__)
-            raise exceptions.DoAuthError(msg, user)
+        elif not isinstance(user_or_partial, user_model):
+            msg = _('`{}` is not a user instance').format(type(user_or_partial).__name__)
+            raise exceptions.DoAuthError(msg, user_or_partial)
 
-        if getattr(cls, 'do_login'):
-            ifresult = cls.do_login(backend, user)
-            if ifresult:
-               result = ifresult
-
-        return cls.ResultUnion(result=result)
+        return cls(result=cls.get_loginresult(backend, user_or_partial))
 
 class SocialAuth(AbstractSocialAuthMutation):
     """Social Auth Mutation"""
 
-    ResultUnion = SocialAuthResult
+    result = graphene.Field(SocialAuthResult)
+    
+    @classmethod
+    def classes():
+        return {
+            SocialResult: results.SocialResult,
+            PartialResult: results.PartialResult
+        }
 
     @classmethod
-    def do_login(backend, user)
+    def get_loginresult(backend, user):
         _do_login(backend, user, user.social_user)
-        return LoginResult(social=user.social_user)
+        return cls.classes().SocialResult(social=user.social_user)
 
 
 class SocialAuthJWT(AbstractSocialAuthMutation):
     """Social Auth for JSON Web Token (JWT)"""
 
-    ResultUnion = SocialAuthJWTResult
+    result = graphene.Field(SocialAuthJWTResult)
+    
+    @classmethod
+    def classes():
+        return {
+            SocialResult: results.JWTResult,
+            PartialResult: results.PartialResult
+        }
+
 
     @classmethod
-    def do_login(backend, user):
+    def get_loginresult(backend, user):
         try:
             from graphql_jwt.shortcuts import get_token
         except ImportError:
             raise ImportError(
                 'django-graphql-jwt not installed.\n'
                 'Use `pip install \'django-graphql-social-auth[jwt]\'`.')
-        return JWTResult(social=user.social_user, token=get_token(user))
+        return cls.classes().JWTResult(social=user.social_user, token=get_token(user))

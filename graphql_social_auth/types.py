@@ -15,7 +15,7 @@ class CamelJSON(GenericScalar):
         name = 'SocialCamelJSON'
 
 
-class SocialType(DjangoObjectType):
+class Social(DjangoObjectType):
     extra_data = CamelJSON()
 
     class Meta:
@@ -26,7 +26,7 @@ class SocialType(DjangoObjectType):
         return self.extra_data
 
 
-class SocialPartialType(DjangoObjectType):
+class Partial(DjangoObjectType):
     data = CamelJSON()
 
     class Meta:

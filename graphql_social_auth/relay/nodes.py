@@ -4,7 +4,7 @@ from social_django import models as social_models
 from .. import types
 
 
-class SocialNode(types.SocialType):
+class SocialNode(types.Social):
 
     class Meta:
         model = social_models.UserSocialAuth
