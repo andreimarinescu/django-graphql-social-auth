@@ -53,13 +53,17 @@ Add the ``SocialAuth`` mutation to your GraphQL schema.
 
     mutation SocialAuth($provider: String!, $accessToken: String!) {
       socialAuth(provider: $provider, accessToken: $accessToken) {
-        social {
-          uid
-          extraData
+        result {
+          __typename
+          ... on Social {
+            social {
+              uid
+              extraData
+            }
+          }
         }
       }
     }
-
 
 JSON Web Token (JWT)
 --------------------
@@ -93,10 +97,16 @@ Authenticate via *accessToken* to obtain a JSON Web Token.
 
     mutation SocialAuth($provider: String!, $accessToken: String!) {
       socialAuth(provider: $provider, accessToken: $accessToken) {
-        social {
-          uid
+        result {
+          __typename
+          ... on JWT {
+            social {
+              uid
+              extraData
+            }
+            token
+          }
         }
-        token
       }
     }
 
@@ -126,9 +136,15 @@ Complete support for `Relay`_.
 .. code:: graphql
 
     mutation SocialAuth($provider: String!, $accessToken: String!) {
-      socialAuth(input:{provider: $provider, accessToken: $accessToken}) {
-        social {
-          uid
+      socialAuth(provider: $provider, accessToken: $accessToken) {
+        result {
+          __typename
+          ... on Social {
+            social {
+              uid
+              extraData
+            }
+          }
         }
       }
     }
@@ -142,16 +158,24 @@ If you want to customize the ``SocialAuth`` behavior, you'll need to customize t
 .. code:: python
 
     import graphene
-    import graphql_social_auth
+    from graphql_social_auth import mutations, results
 
+    class UserSocial(results.Social):
+      user = graphene.Field(UserType)
 
-    class SocialAuth(graphql_social_auth.SocialAuthMutation):
-        user = graphene.Field(UserType)
+      @classmethod
+      def resolve_user(cls, root, info, **kwargs):
+          return UserType(info.context.user)
 
-        @classmethod
-        def resolve(cls, root, info, social, **kwargs):
-            return cls(user=social.user)
+    class SocialAuthResult(graphene.Union):
+      class Meta:
+          types = [results.Partial, UserSocial]
 
+    class SocialAuth(mutations.SocialAuthMutation):
+
+        Social = UserSocial
+
+        result = graphene.Field(SocialAuthResult)
 
 Authenticate via *accessToken* to obtain the *user id*.
 
@@ -159,11 +183,17 @@ Authenticate via *accessToken* to obtain the *user id*.
 
     mutation SocialAuth($provider: String!, $accessToken: String!) {
       socialAuth(provider: $provider, accessToken: $accessToken) {
-        social {
-          uid
-        }
-        user {
-          id
+        result {
+          __typename
+          ... on UserSocial {
+            social {
+              uid
+              extraData
+            }
+            user {
+              id
+            }
+          }
         }
       }
     }
