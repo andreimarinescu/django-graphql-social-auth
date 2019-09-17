@@ -2,7 +2,6 @@ import graphene
 
 from . import nodes
 from .. import mutations
-from ..decorators import social_auth
 
 
 class AbstractSocialAuthMutation(graphene.relay.ClientIDMutation):

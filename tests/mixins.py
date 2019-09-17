@@ -7,7 +7,6 @@ from .decorators import social_auth_mock
 class SocialAuthMixin:
 
     @social_auth_mock
-    @patch('graphql_social_auth.decorators._do_login')
     def test_social_auth(self, *args):
         response = self.execute({
             'provider': 'google-oauth2',
@@ -21,7 +20,6 @@ class SocialAuthMixin:
 class SocialAuthJWTMixin:
 
     @social_auth_mock
-    @patch('graphql_social_auth.decorators._do_login')
     def test_social_auth(self, *args):
         response = self.execute({
             'provider': 'google-oauth2',

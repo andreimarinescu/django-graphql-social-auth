@@ -15,7 +15,6 @@ from .decorators import social_auth_mock
 class ExceptionsTests(TestCase):
 
     @social_auth_mock
-    @patch('graphql_social_auth.decorators._do_login')
     def test_psa_missing_backend(self, *args):
 
         with self.assertRaises(exceptions.GraphQLSocialAuthError):
