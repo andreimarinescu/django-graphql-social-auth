@@ -13,12 +13,24 @@ class SocialAuthMixin:
             'provider': 'google-oauth2',
             'accessToken': '-token-',
         })
-
-        social = response.data['socialAuth']['social']
+        print(response.data)
+        social = response.data['socialAuth']['result']['social']
         self.assertEqual('test', social['uid'])
 
 
 class SocialAuthJWTMixin:
+
+    @social_auth_mock
+    @patch('graphql_social_auth.decorators._do_login')
+    def test_social_auth(self, *args):
+        response = self.execute({
+            'provider': 'google-oauth2',
+            'accessToken': '-token-',
+        })
+
+        jwt = response.data['socialAuth']['result']
+        self.assertIsNotNone(jwt['token'])
+
 
     @social_auth_mock
     @patch.dict(sys.modules, {'graphql_jwt.shortcuts': None})

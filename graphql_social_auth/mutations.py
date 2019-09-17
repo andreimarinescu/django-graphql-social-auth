@@ -14,7 +14,7 @@ class PartialResponse(object):
     def __init__(response):
         self.response = response
 
-class AbstractSocialAuthResult(graphene.Union):
+class AbstractSocialAuth(graphene.Union):
     class Meta:
         abstract = True
 
@@ -24,17 +24,16 @@ class AbstractSocialAuthResult(graphene.Union):
 
 class SocialAuthResult(graphene.Union):
     class Meta:
-        types = [results.PartialResult, results.SocialResult]
+        types = [results.Partial, results.Social]
 
-    @staticmethod
-    def resolve_type(obj, context, info):
-        return obj.__class__
 
 class SocialAuthJWTResult(graphene.Union):
     class Meta:
-        types = [results.PartialResult, results.JWTResult]
-
+        types = [results.Partial, results.JWT]
+        
 class AbstractSocialAuthMutation(graphene.Mutation):
+
+    Partial = results.Partial
 
     class Meta:
         abstract = True
@@ -65,8 +64,8 @@ class AbstractSocialAuthMutation(graphene.Mutation):
         user_model = strategy.storage.user.user_model()
 
         if isinstance(user_or_partial, PartialResponse):
-            return cls.classes().ResultUnion(
-                result=cls.classes().PartialResult(
+            return cls(
+                result=cls.Partial(
                     partial=user_or_partial.response)
                 )
 
@@ -80,39 +79,28 @@ class SocialAuth(AbstractSocialAuthMutation):
     """Social Auth Mutation"""
 
     result = graphene.Field(SocialAuthResult)
-    
-    @classmethod
-    def classes():
-        return {
-            SocialResult: results.SocialResult,
-            PartialResult: results.PartialResult
-        }
+
+    Social = results.Social
 
     @classmethod
-    def get_loginresult(backend, user):
+    def get_loginresult(cls, backend, user):
         _do_login(backend, user, user.social_user)
-        return cls.classes().SocialResult(social=user.social_user)
+        return cls.Social(social=user.social_user)
 
 
 class SocialAuthJWT(AbstractSocialAuthMutation):
     """Social Auth for JSON Web Token (JWT)"""
 
     result = graphene.Field(SocialAuthJWTResult)
-    
-    @classmethod
-    def classes():
-        return {
-            SocialResult: results.JWTResult,
-            PartialResult: results.PartialResult
-        }
 
+    Social = results.JWT
 
     @classmethod
-    def get_loginresult(backend, user):
+    def get_loginresult(cls, backend, user):
         try:
             from graphql_jwt.shortcuts import get_token
         except ImportError:
             raise ImportError(
                 'django-graphql-jwt not installed.\n'
                 'Use `pip install \'django-graphql-social-auth[jwt]\'`.')
-        return cls.classes().JWTResult(social=user.social_user, token=get_token(user))
+        return cls.Social(social=user.social_user, token=get_token(user))

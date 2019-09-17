@@ -1,11 +1,11 @@
 import graphene
 from . import types
 
-class PartialResult(graphene.ObjectType):
-    partial = graphene.Field(types.Partial)
+class Partial(graphene.ObjectType):
+    partial = graphene.Field(types.PartialType)
 
-class SocialResult(graphene.ObjectType):
-    social = graphene.Field(types.Social)
+class Social(graphene.ObjectType):
+    social = graphene.Field(types.SocialType)
 
-class JWTResult(SocialResult):
+class JWT(Social):
     token = graphene.String()

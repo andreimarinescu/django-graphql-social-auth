@@ -10,9 +10,14 @@ class SocialAuthTests(mixins.SocialAuthMixin, SchemaTestCase):
     query = '''
     mutation SocialAuth($provider: String!, $accessToken: String!) {
       socialAuth(provider: $provider, accessToken: $accessToken) {
-        social {
-          uid
-          extraData
+        result {
+          __typename
+          ... on Social {
+            social {
+              uid
+              extraData
+            }
+          }
         }
       }
     }'''
@@ -21,18 +26,18 @@ class SocialAuthTests(mixins.SocialAuthMixin, SchemaTestCase):
         social_auth = graphql_social_auth.SocialAuth.Field()
 
 
-class SocialAuthJWTTests(mixins.SocialAuthMixin,
-                         mixins.SocialAuthJWTMixin,
+class SocialAuthJWTTests(mixins.SocialAuthJWTMixin,
                          SchemaTestCase):
 
     query = '''
     mutation SocialAuth($provider: String!, $accessToken: String!) {
       socialAuth(provider: $provider, accessToken: $accessToken) {
-        social {
-          uid
-          extraData
+        result {
+          __typename
+          ... on JWT {
+             token
+          }
         }
-        token
       }
     }'''
 

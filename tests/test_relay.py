@@ -10,9 +10,14 @@ class SocialAuthTests(mixins.SocialAuthMixin, RelaySchemaTestCase):
     query = '''
     mutation SocialAuth($input: SocialAuthInput!) {
       socialAuth(input: $input) {
-        social {
-          uid
-          extraData
+        result {
+          __typename
+          ... on Social {
+            social {
+              uid
+              extraData
+            }
+          }
         }
         clientMutationId
       }
@@ -22,18 +27,18 @@ class SocialAuthTests(mixins.SocialAuthMixin, RelaySchemaTestCase):
         social_auth = graphql_social_auth.relay.SocialAuth.Field()
 
 
-class SocialAuthJWTTests(mixins.SocialAuthMixin,
-                         mixins.SocialAuthJWTMixin,
+class SocialAuthJWTTests(mixins.SocialAuthJWTMixin,
                          RelaySchemaTestCase):
 
     query = '''
     mutation SocialAuth($input: SocialAuthJWTInput!) {
       socialAuth(input: $input) {
-        social {
-          uid
-          extraData
+        result {
+          __typename
+          ... on JWT {
+             token
+          }
         }
-        token
         clientMutationId
       }
     }'''
