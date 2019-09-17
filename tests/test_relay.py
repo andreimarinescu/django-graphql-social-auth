@@ -36,7 +36,11 @@ class SocialAuthJWTTests(mixins.SocialAuthJWTMixin,
         result {
           __typename
           ... on JWT {
-             token
+            social {
+              uid
+              extraData
+            }
+            token
           }
         }
         clientMutationId
