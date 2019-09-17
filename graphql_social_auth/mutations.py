@@ -7,25 +7,15 @@ from social_core.exceptions import MissingBackend
 from social_django.utils import load_backend, load_strategy
 from social_django.views import _do_login
 
-from . import exceptions, results
-
-class PartialResponse(object):
-    response = None
-    def __init__(response):
-        self.response = response
+from . import exceptions, results, partial
 
 class AbstractSocialAuth(graphene.Union):
     class Meta:
         abstract = True
 
-    @staticmethod
-    def resolve_type(obj, context, info):
-        return obj.__class__
-
 class SocialAuthResult(graphene.Union):
     class Meta:
         types = [results.Partial, results.Social]
-
 
 class SocialAuthJWTResult(graphene.Union):
     class Meta:
@@ -63,7 +53,7 @@ class AbstractSocialAuthMutation(graphene.Mutation):
 
         user_model = strategy.storage.user.user_model()
 
-        if isinstance(user_or_partial, PartialResponse):
+        if isinstance(user_or_partial, partial.PartialResponse):
             return cls(
                 result=cls.Partial(
                     partial=user_or_partial.response)

@@ -17,7 +17,7 @@ class AbstractSocialAuthMutation(graphene.relay.ClientIDMutation):
 class SocialAuth(AbstractSocialAuthMutation):
     """Social Auth Mutation for Relay"""
 
-    result = graphene.ConnectionField(nodes.SocialAuthResultConnection)
+    result = graphene.Field(nodes.SocialAuthResultNode)
 
     @classmethod
     def mutate_and_get_payload(cls, root, info, **kwargs):
@@ -27,7 +27,7 @@ class SocialAuth(AbstractSocialAuthMutation):
 class SocialAuthJWT(AbstractSocialAuthMutation):
     """Social Auth for JSON Web Token (JWT)"""
 
-    result = graphene.ConnectionField(nodes.SocialAuthJWTResultConnection)
+    result = graphene.Field(nodes.SocialAuthJWTResultNode)
 
     @classmethod
     def mutate_and_get_payload(cls, root, info, **kwargs):

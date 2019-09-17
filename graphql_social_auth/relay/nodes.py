@@ -2,33 +2,30 @@ import graphene
 from graphene import relay
 from social_django import models as social_models
 
+from .. import mutations
+
 from .. import results
 
-class Partial(results.Partial):
-	class Meta:
-		interfaces = [relay.Node]
-
-class Social(results.Social):
-	class Meta:
-		interfaces = [relay.Node]
-
-class JWT(Social):
-	class Meta:
-		interfaces = [relay.Node]
-
-class SocialAuthResult(graphene.Union):
+class SocialAuthResultNode(mutations.SocialAuthResult):
     class Meta:
-        types = [Partial, Social]
+        types = [results.Partial, results.Social]
+        interfaces = [relay.Node]
 
-class SocialAuthJWTResult(graphene.Union):
+class SocialAuthJWTResultNode(mutations.SocialAuthJWTResult):
     class Meta:
-        types = [Partial, JWT]
+        types = [results.Partial, results.JWT]
+        interfaces = [relay.Node]
 
-class SocialAuthResultConnection(graphene.Connection):
+class SocialAuth(mutations.SocialAuth):
+    
+    results = graphene.Field(SocialAuthResultNode)
+
     class Meta:
-        node = SocialAuthResult
+        interfaces = [relay.Node]
 
-class SocialAuthJWTResultConnection(graphene.Connection):
+class SocialAuthJWT(mutations.SocialAuthJWT):
+    
+    results = graphene.Field(SocialAuthJWTResultNode)
+
     class Meta:
-        node = SocialAuthJWTResult
-
+        interfaces = [relay.Node]
