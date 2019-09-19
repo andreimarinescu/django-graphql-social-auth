@@ -8,12 +8,12 @@ from .. import results
 
 class SocialAuthResultNode(mutations.SocialAuthResult):
     class Meta:
-        types = [results.Partial, results.Social]
+        types = [results.Redirect, results.Social]
         interfaces = [relay.Node]
 
 class SocialAuthJWTResultNode(mutations.SocialAuthJWTResult):
     class Meta:
-        types = [results.Partial, results.JWT]
+        types = [results.Redirect, results.JWT]
         interfaces = [relay.Node]
 
 class SocialAuth(mutations.SocialAuth):

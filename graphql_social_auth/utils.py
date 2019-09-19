@@ -1,16 +1,21 @@
-import re
+from django.conf import settings
+from social_core.utils import setting_name, module_member, get_strategy
+from social_core.exceptions import MissingBackend
+from social_core.backends.utils import get_backend
 
-dashed_to_camel_regex = re.compile(r'(?!^)_([a-zA-Z])')
+BACKENDS = settings.AUTHENTICATION_BACKENDS
+STRATEGY = getattr(settings, setting_name('STRATEGY'),
+                   'graphql_social_auth.strategy.GraphqlStrategy')
+STORAGE = getattr(settings, setting_name('STORAGE'),
+                  'social_django.models.DjangoStorage')
+Strategy = module_member(STRATEGY)
+Storage = module_member(STORAGE)
 
 
-def dashed_to_camel(dashed_data):
-    data = {}
-    for key, value in dashed_data.items():
-        if isinstance(value, dict):
-            value = dashed_to_camel(value)
+def load_strategy(request=None):
+    return get_strategy(STRATEGY, STORAGE, request)
 
-        dashed_key = dashed_to_camel_regex\
-            .sub(lambda match: match.group(1).upper(), key)
 
-        data[dashed_key] = value
-    return data
+def load_backend(strategy, name, redirect_uri):
+    Backend = get_backend(BACKENDS, name)
+    return Backend(strategy, redirect_uri)
