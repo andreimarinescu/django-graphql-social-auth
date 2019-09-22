@@ -4,32 +4,28 @@ from . import nodes
 from .. import mutations
 
 
-class AbstractSocialAuthMutation(graphene.relay.ClientIDMutation):
-
-    class Meta:
-        abstract = True
-
-    class Input(mutations.SocialAuth.Arguments):
-        """Social Auth Input"""
-
-
-class SocialAuth(AbstractSocialAuthMutation):
-    """Social Auth Mutation for Relay"""
-
-    result = graphene.Field(nodes.SocialAuthResultNode)
+class SocialAuth(graphene.relay.ClientIDMutation):
+    
+    results = graphene.Field(SocialAuthResultNode)
 
     @classmethod
     def mutate_and_get_payload(cls, root, info, **kwargs):
         return mutations.SocialAuth.mutate(root, info, **kwargs)
 
 
-class SocialAuthJWT(AbstractSocialAuthMutation):
-    """Social Auth for JSON Web Token (JWT)"""
-
-    result = graphene.Field(nodes.SocialAuthJWTResultNode)
+class SocialAuthComplete(graphene.relay.ClientIDMutation):
+    
+    results = graphene.Field(SocialAuthCompleteResultNode)
 
     @classmethod
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        return mutations.SocialAuthJWT.mutate(root, info, **kwargs)
+        return mutations.SocialAuthComplete.mutate(root, info, **kwargs)
 
 
+class SocialAuthJWTComplete(graphene.relay.ClientIDMutation):
+    
+    results = graphene.Field(SocialAuthJWTCompleteResultNode)
+
+    @classmethod
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        return mutations.SocialAuthJWTComplete.mutate(root, info, **kwargs)

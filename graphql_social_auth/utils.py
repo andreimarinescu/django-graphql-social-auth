@@ -12,8 +12,8 @@ Strategy = module_member(STRATEGY)
 Storage = module_member(STORAGE)
 
 
-def load_strategy(request=None):
-    return get_strategy(STRATEGY, STORAGE, request)
+def load_strategy(request=None, provider_data=None):
+    return get_strategy(STRATEGY, STORAGE, request, provider_data=provider_data)
 
 
 def load_backend(strategy, name, redirect_uri):
