@@ -6,10 +6,10 @@ from . import mixins
 from .testcases import SchemaTestCase
 
 
-class SocialAuthTests(mixins.SocialAuthMixin, SchemaTestCase):
+class SocialAuthCompleteTests(mixins.SocialAuthCompleteMixin, SchemaTestCase):
     query = '''
-    mutation SocialAuth($provider: String!, $accessToken: String!) {
-      socialAuth(provider: $provider, accessToken: $accessToken) {
+    mutation SocialAuthComplete($provider: String!, $providerData: JSONString!) {
+      socialAuthComplete(provider: $provider, providerData: $providerData) {
         result {
           __typename
           ... on Social {
@@ -23,15 +23,15 @@ class SocialAuthTests(mixins.SocialAuthMixin, SchemaTestCase):
     }'''
 
     class Mutations(graphene.ObjectType):
-        social_auth = graphql_social_auth.SocialAuth.Field()
+        social_auth_complete = graphql_social_auth.SocialAuthComplete.Field()
 
 
-class SocialAuthJWTTests(mixins.SocialAuthJWTMixin,
+class SocialAuthJWTCompleteTests(mixins.SocialAuthJWTCompleteMixin,
                          SchemaTestCase):
 
     query = '''
-    mutation SocialAuth($provider: String!, $accessToken: String!) {
-      socialAuth(provider: $provider, accessToken: $accessToken) {
+    mutation SocialAuthComplete($provider: String!, $providerData: JSONString!) {
+      socialAuthComplete(provider: $provider, providerData: $providerData) {
         result {
           __typename
           ... on JWT {
@@ -46,4 +46,4 @@ class SocialAuthJWTTests(mixins.SocialAuthJWTMixin,
     }'''
 
     class Mutations(graphene.ObjectType):
-        social_auth = graphql_social_auth.SocialAuthJWT.Field()
+        social_auth_complete = graphql_social_auth.SocialAuthJWTComplete.Field()

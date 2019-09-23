@@ -6,8 +6,10 @@ from django.utils.translation import ugettext_lazy as _
 from social_core.exceptions import MissingBackend
 from .utils import load_backend, load_strategy
 from social_django.views import _do_login
+from social_core.utils import user_is_authenticated, \
+                   user_is_active, partial_pipeline_data
 
-from . import exceptions, results, partial
+from . import exceptions, results
 
                
 class AbstractSocialAuthMutation(graphene.Mutation):
@@ -20,7 +22,7 @@ class AbstractSocialAuthMutation(graphene.Mutation):
 
     @classmethod
     def get_backend(cls, request, provider, **kwargs):
-        strategy = load_strategy(info.context, kwargs)
+        strategy = load_strategy(request, **kwargs)
 
         try:
             backend = load_backend(strategy, provider, redirect_uri=None)
@@ -40,8 +42,18 @@ class AbstractSocialAuthCompleteMutation(graphene.Mutation):
         abstract = True
 
     class Arguments:
-        provider_data = graphene.JSONString(default_value={})
+        providerData = graphene.JSONString(default_value={})
         provider = graphene.String(required=True)
+
+    @classmethod
+    def get_backend(cls, request, provider, **kwargs):
+        strategy = load_strategy(request, **kwargs)
+
+        try:
+            backend = load_backend(strategy, provider, redirect_uri=None)
+        except MissingBackend:
+            raise exceptions.GraphQLSocialAuthError(_('Provider not found'))
+        return backend
 
     @classmethod
     def do_login(cls, backend, user, social_user):
@@ -63,20 +75,26 @@ class AbstractSocialAuthCompleteMutation(graphene.Mutation):
         backend = cls.get_backend(info.context, provider, **kwargs)
 
         data = backend.strategy.request_data()
+        
+        user = info.context.user
 
         is_authenticated = user_is_authenticated(user)
         user = user if is_authenticated else None
 
-        partial = partial_pipeline_data(backend, user, *args, **kwargs)
+        partial = partial_pipeline_data(backend, user, **kwargs)
         if partial:
             user = backend.continue_pipeline(partial)
             # clean partial data after usage
             backend.strategy.clean_partial_pipeline(partial.token)
         else:
-            user = backend.complete(user=user, *args, **kwargs)
+            user = backend.do_auth(kwargs['providerData']['access_token'])
+
+        if user is None:
+            raise exceptions.InvalidTokenError(_('Invalid token'))
 
         # check if the output value is something else than a user and just
         # return it to the client
+        user_model = backend.strategy.storage.user.user_model()
         if isinstance(user, graphene.ObjectType):
             return user
 

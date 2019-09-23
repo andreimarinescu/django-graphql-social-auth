@@ -18,18 +18,18 @@ class ExceptionsTests(TestCase):
     def test_psa_missing_backend(self, *args):
 
         with self.assertRaises(exceptions.GraphQLSocialAuthError):
-            mutations.SocialAuth.mutate(None, self.info(), 'unknown', 'token')
+            mutations.SocialAuthComplete.mutate(None, self.info(), 'unknown', providerData={'access_token': 'token'})
             
     @social_auth_mock
     @override_settings(SOCIAL_AUTH_PIPELINE=[])
     def test_psa_invalid_token(self, *args):
 
         with self.assertRaises(exceptions.InvalidTokenError):
-            mutations.SocialAuth.mutate(None, self.info(), 'google-oauth2', 'token')
+            mutations.SocialAuthComplete.mutate(None, self.info(), 'google-oauth2', providerData={'access_token': 'token'})
 
     @social_auth_mock
     @patch('social_core.backends.oauth.BaseOAuth2.do_auth')
     def test_psa_do_auth_error(self, *args):
 
         with self.assertRaises(exceptions.DoAuthError):
-             mutations.SocialAuth.mutate(None, self.info(), 'google-oauth2', 'token')
+             mutations.SocialAuthComplete.mutate(None, self.info(), 'google-oauth2', providerData={'access_token': 'token'})

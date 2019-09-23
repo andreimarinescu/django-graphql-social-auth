@@ -6,7 +6,10 @@ from .. import mutations
 
 class SocialAuth(graphene.relay.ClientIDMutation):
     
-    results = graphene.Field(SocialAuthResultNode)
+    result = graphene.Field(nodes.SocialAuthResultNode)
+
+    class Input(mutations.SocialAuth.Arguments):
+        """Social Auth Input"""
 
     @classmethod
     def mutate_and_get_payload(cls, root, info, **kwargs):
@@ -15,7 +18,10 @@ class SocialAuth(graphene.relay.ClientIDMutation):
 
 class SocialAuthComplete(graphene.relay.ClientIDMutation):
     
-    results = graphene.Field(SocialAuthCompleteResultNode)
+    result = graphene.Field(nodes.SocialAuthCompleteResultNode)
+
+    class Input(mutations.SocialAuthComplete.Arguments):
+        """Social Auth Input"""
 
     @classmethod
     def mutate_and_get_payload(cls, root, info, **kwargs):
@@ -24,8 +30,11 @@ class SocialAuthComplete(graphene.relay.ClientIDMutation):
 
 class SocialAuthJWTComplete(graphene.relay.ClientIDMutation):
     
-    results = graphene.Field(SocialAuthJWTCompleteResultNode)
+    result = graphene.Field(nodes.SocialAuthJWTCompleteResultNode)
 
+    class Input(mutations.SocialAuthJWTComplete.Arguments):
+        """Social Auth Input"""
+    
     @classmethod
     def mutate_and_get_payload(cls, root, info, **kwargs):
         return mutations.SocialAuthJWTComplete.mutate(root, info, **kwargs)
