@@ -17,6 +17,10 @@ class SocialAuthCompleteTests(mixins.SocialAuthCompleteMixin, SchemaTestCase):
               uid
               extraData
             }
+            isSuccessfulLogin
+            isInactiveUser
+            isNew
+            isNewAssociation
           }
         }
       }
@@ -40,6 +44,10 @@ class SocialAuthJWTCompleteTests(mixins.SocialAuthJWTCompleteMixin,
               extraData
             }
             token
+            isSuccessfulLogin
+            isInactiveUser
+            isNew
+            isNewAssociation
           }
         }
       }

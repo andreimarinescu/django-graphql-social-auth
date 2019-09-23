@@ -29,7 +29,7 @@ See the `documentation`_ for further guidance on setting *Python Social Auth*.
 
 .. _documentation: http://python-social-auth.readthedocs.io/en/latest/configuration/django.html
 
-Add the ``SocialAuth`` mutation to your GraphQL schema.
+Add the ``SocialAuthComplete`` mutation to your GraphQL schema.
 
 .. code:: python
 
@@ -38,7 +38,7 @@ Add the ``SocialAuth`` mutation to your GraphQL schema.
 
 
     class Mutations(graphene.ObjectType):
-        social_auth = graphql_social_auth.SocialAuth.Field()
+        social_auth = graphql_social_auth.SocialAuthComplete.Field()
 
 `Session`_ authentication via *accessToken*.
 
@@ -51,8 +51,8 @@ Add the ``SocialAuth`` mutation to your GraphQL schema.
 
 .. code:: graphql
 
-    mutation SocialAuth($provider: String!, $accessToken: String!) {
-      socialAuth(provider: $provider, accessToken: $accessToken) {
+    mutation SocialAuthComplete($provider: String!, $providerData: JSONString!) {
+      socialAuthComplete(provider: $provider, providerData: $providerData) {
         result {
           __typename
           ... on Social {
@@ -60,6 +60,10 @@ Add the ``SocialAuth`` mutation to your GraphQL schema.
               uid
               extraData
             }
+            isSuccessfulLogin
+            isInactiveUser
+            isNew
+            isNewAssociation
           }
         }
       }
@@ -79,7 +83,7 @@ Install additional requirements.
     pip install 'django-graphql-social-auth[jwt]'
 
 
-Add the ``SocialAuthJWT`` mutation to your GraphQL schema.
+Add the ``SocialAuthJWTComplete`` mutation to your GraphQL schema.
 
 .. code:: python
 
@@ -88,15 +92,15 @@ Add the ``SocialAuthJWT`` mutation to your GraphQL schema.
 
 
     class Mutations(graphene.ObjectType):
-        social_auth = graphql_social_auth.SocialAuthJWT.Field()
+        social_auth_complete = graphql_social_auth.SocialAuthJWTComplete.Field()
 
 
 Authenticate via *accessToken* to obtain a JSON Web Token.
 
 .. code:: graphql
 
-    mutation SocialAuth($provider: String!, $accessToken: String!) {
-      socialAuth(provider: $provider, accessToken: $accessToken) {
+    mutation SocialAuthComplete($provider: String!, $providerData: JSONString!) {
+      socialAuthComplete(provider: $provider, providerData: $providerData) {
         result {
           __typename
           ... on JWT {
@@ -105,6 +109,10 @@ Authenticate via *accessToken* to obtain a JSON Web Token.
               extraData
             }
             token
+            isSuccessfulLogin
+            isInactiveUser
+            isNew
+            isNewAssociation
           }
         }
       }
@@ -125,9 +133,9 @@ Complete support for `Relay`_.
 
 
     class Mutations(graphene.ObjectType):
-        social_auth = graphql_social_auth.relay.SocialAuth.Field()
+        social_auth_complete = graphql_social_auth.relay.SocialAuthComplete.Field()
 
-``graphql_social_auth.relay.SocialAuthJWT.Field()`` for `JSON Web Token (JWT)`_ authentication.
+``graphql_social_auth.relay.SocialAuthJWTComplete.Field()`` for `JSON Web Token (JWT)`_ authentication.
 
 `Relay mutations`_ only accepts one argument named *input*:
 
@@ -135,8 +143,8 @@ Complete support for `Relay`_.
 
 .. code:: graphql
 
-    mutation SocialAuth($provider: String!, $accessToken: String!) {
-      socialAuth(input:{provider: $provider, accessToken: $accessToken}) {
+    mutation SocialAuthComplete($provider: String!, $providerData: JSONString!) {
+      socialAuthComplete(input:{provider: $provider, providerData: $providerData}) {
         result {
           __typename
           ... on Social {
@@ -144,6 +152,10 @@ Complete support for `Relay`_.
               uid
               extraData
             }
+            isSuccessfulLogin
+            isInactiveUser
+            isNew
+            isNewAssociation
           }
         }
       }
@@ -153,7 +165,7 @@ Complete support for `Relay`_.
 Customizing
 -----------
 
-If you want to customize the ``SocialAuth`` behavior, you'll need to customize the ``resolve()`` method on a subclass of ``SocialAuthMutation`` or ``.relay.SocialAuthMutation.``
+If you want to customize the ``SocialAuthComplete`` behavior, you'll need to customize the ``get_result()`` method on a subclass of ``SocialAuthComplete`` and add a new ``.relay.SocialAuthComplete`` for relay.
 
 .. code:: python
 
@@ -167,27 +179,38 @@ If you want to customize the ``SocialAuth`` behavior, you'll need to customize t
       def resolve_user(cls, root, info, **kwargs):
           return UserType(info.context.user)
 
-    class SocialAuthResult(graphene.Union):
+    class SocialAuthCompleteResult(graphene.Union):
       class Meta:
           types = [results.Partial, UserSocial]
 
-    class SocialAuth(mutations.SocialAuthMutation):
+    class SocialAuthComplete(mutations.SocialAuthCompleteMutation):
 
-        Social = UserSocial
-
-        result = graphene.Field(SocialAuthResult)
+        result = graphene.Field(SocialAuthCompleteResult)
 
       @classmethod
-      def get_loginresult(cls, backend, user):
-          _do_login(backend, user, user.social_user)
-          return cls.Social(user=user, social=user.social_user)
+      def get_result(cls,
+              backend,
+              user,
+              is_successful_login,
+              is_inactive_user,
+              is_new,
+              is_new_association,
+              **kwargs):
+          return UserSocial(user=user,
+              social=user.social_user,
+              is_successful_login = is_successful_login,
+              is_inactive_user = is_inactive_user,
+              is_new = is_new,
+              is_new_association = is_new_association,
+              session = backend.strategy.session)
+
 
 Authenticate via *accessToken* to obtain the *user id*.
 
 .. code:: graphql
 
-    mutation SocialAuth($provider: String!, $accessToken: String!) {
-      socialAuth(provider: $provider, accessToken: $accessToken) {
+    mutation SocialAuthComplete($provider: String!, $providerData: JSONString!) {
+      socialAuthComplete(provider: $provider, providerData: $providerData) {
         result {
           __typename
           ... on UserSocial {
@@ -198,6 +221,10 @@ Authenticate via *accessToken* to obtain the *user id*.
             user {
               id
             }
+            isSuccessfulLogin
+            isInactiveUser
+            isNew
+            isNewAssociation
           }
         }
       }
