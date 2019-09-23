@@ -175,14 +175,12 @@ If you want to customize the ``SocialAuthComplete`` behavior, you'll need to cus
     class UserSocial(results.Social):
         user = graphene.Field(UserType)
 
-        @classmethod
-        def resolve_user(cls, root, info, **kwargs):
-            return UserType(info.context.user)
 
     class SocialAuthCompleteResult(graphene.Union):
         class Meta:
             types = [UserSocial, results.Redirect, results.Html]
-            
+
+
     class SocialAuthComplete(mutations.SocialAuthCompleteMutation):
 
         result = graphene.Field(SocialAuthCompleteResult)
