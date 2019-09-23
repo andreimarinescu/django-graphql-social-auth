@@ -173,36 +173,36 @@ If you want to customize the ``SocialAuthComplete`` behavior, you'll need to cus
     from graphql_social_auth import mutations, results
 
     class UserSocial(results.Social):
-      user = graphene.Field(UserType)
+        user = graphene.Field(UserType)
 
-      @classmethod
-      def resolve_user(cls, root, info, **kwargs):
-          return UserType(info.context.user)
+        @classmethod
+        def resolve_user(cls, root, info, **kwargs):
+            return UserType(info.context.user)
 
     class SocialAuthCompleteResult(graphene.Union):
-      class Meta:
-          types = [results.Partial, UserSocial]
+        class Meta:
+            types = [results.Partial, UserSocial]
 
     class SocialAuthComplete(mutations.SocialAuthCompleteMutation):
 
         result = graphene.Field(SocialAuthCompleteResult)
 
-      @classmethod
-      def get_result(cls,
-              backend,
-              user,
-              is_successful_login,
-              is_inactive_user,
-              is_new,
-              is_new_association,
-              **kwargs):
-          return UserSocial(user=user,
-              social=user.social_user,
-              is_successful_login = is_successful_login,
-              is_inactive_user = is_inactive_user,
-              is_new = is_new,
-              is_new_association = is_new_association,
-              session = backend.strategy.session)
+        @classmethod
+        def get_result(cls,
+                  backend,
+                  user,
+                  is_successful_login,
+                  is_inactive_user,
+                  is_new,
+                  is_new_association,
+                  **kwargs):
+            return UserSocial(user=user,
+                social=user.social_user,
+                is_successful_login = is_successful_login,
+                is_inactive_user = is_inactive_user,
+                is_new = is_new,
+                is_new_association = is_new_association,
+                session = backend.strategy.session)
 
 
 Authenticate via *accessToken* to obtain the *user id*.
@@ -231,12 +231,12 @@ Authenticate via *accessToken* to obtain the *user id*.
     }
 
 
-Project template
-----------------
+.. Project template
+.. ----------------
 
-There is a `Django project template`_ to start a demo project.
+.. There is a `Django project template`_ to start a demo project.
 
-.. _Django project template: https://github.com/ice-creams/graphql-social-auth-template
+.. .. _Django project template: https://github.com/ice-creams/graphql-social-auth-template
 
 ----
 
