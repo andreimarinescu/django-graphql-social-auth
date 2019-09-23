@@ -181,8 +181,8 @@ If you want to customize the ``SocialAuthComplete`` behavior, you'll need to cus
 
     class SocialAuthCompleteResult(graphene.Union):
         class Meta:
-            types = [results.Partial, UserSocial]
-
+            types = [UserSocial, results.Redirect, results.Html]
+            
     class SocialAuthComplete(mutations.SocialAuthCompleteMutation):
 
         result = graphene.Field(SocialAuthCompleteResult)
