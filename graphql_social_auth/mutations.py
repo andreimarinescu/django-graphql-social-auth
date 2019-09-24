@@ -44,6 +44,7 @@ class AbstractSocialAuthCompleteMutation(graphene.Mutation):
     class Arguments:
         providerData = graphene.JSONString(default_value={})
         provider = graphene.String(required=True)
+        # state = graphene.String(default_value=None)
 
     @classmethod
     def get_backend(cls, request, provider, **kwargs):
@@ -73,7 +74,11 @@ class AbstractSocialAuthCompleteMutation(graphene.Mutation):
     @classmethod
     def mutate(cls, root, info, provider, **kwargs):
         backend = cls.get_backend(info.context, provider, **kwargs)
-
+        
+        # state = kwargs.get('state')
+        # if state:
+        #     backend.strategy.session_set(backend.name + '_state', state)
+        
         data = backend.strategy.request_data()
         
         user = info.context.user
