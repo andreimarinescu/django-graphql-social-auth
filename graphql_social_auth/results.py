@@ -10,8 +10,6 @@ class Social(graphene.ObjectType):
     is_new = graphene.Boolean()
     is_new_association = graphene.Boolean()
 
-    session = graphene.JSONString(description='Session data')
-
 
 class JWT(Social):
     token = graphene.String()
@@ -19,12 +17,10 @@ class JWT(Social):
 
 class Redirect(graphene.ObjectType):
     url = graphene.String(description='Redirect url')
-    session = graphene.JSONString(description='Session data')
 
 
 class Html(graphene.ObjectType):
     content = graphene.String(description='Html content')
-    session = graphene.JSONString(description='Session data')
 
 
 class SocialAuthResult(graphene.Union):

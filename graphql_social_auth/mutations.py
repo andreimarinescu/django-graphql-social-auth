@@ -81,13 +81,13 @@ class AbstractSocialAuthCompleteMutation(graphene.Mutation):
         is_authenticated = user_is_authenticated(user)
         user = user if is_authenticated else None
 
-        partial = partial_pipeline_data(backend, user, **kwargs)
+        partial = partial_pipeline_data(backend, user)
         if partial:
             user = backend.continue_pipeline(partial)
             # clean partial data after usage
             backend.strategy.clean_partial_pipeline(partial.token)
         else:
-            user = backend.do_auth(kwargs['providerData']['access_token'])
+            user = backend.complete(user=user)
 
         if user is None:
             raise exceptions.InvalidTokenError(_('Invalid token'))
@@ -165,8 +165,7 @@ class SocialAuthComplete(AbstractSocialAuthCompleteMutation):
             is_successful_login = is_successful_login,
             is_inactive_user = is_inactive_user,
             is_new = is_new,
-            is_new_association = is_new_association,
-            session = backend.strategy.session)
+            is_new_association = is_new_association)
 
 
 class SocialAuthJWTComplete(AbstractSocialAuthCompleteMutation):
@@ -194,5 +193,4 @@ class SocialAuthJWTComplete(AbstractSocialAuthCompleteMutation):
             is_successful_login = is_successful_login,
             is_inactive_user = is_inactive_user,
             is_new = is_new,
-            is_new_association = is_new_association,
-            session = backend.strategy.session)
+            is_new_association = is_new_association)

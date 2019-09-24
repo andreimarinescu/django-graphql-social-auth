@@ -8,7 +8,7 @@ class GraphqlStrategy(DjangoStrategy):
         super(GraphqlStrategy, self).__init__(storage, request, tpl)
 
     def redirect(self, url):
-        return Redirect(url=url, session=self.session)
+        return Redirect(url=url)
 
     def request_data(self, merge=True):
         data = super(GraphqlStrategy, self).request_data(merge)
@@ -16,4 +16,4 @@ class GraphqlStrategy(DjangoStrategy):
         return data
 
     def html(self, content):
-        return Html(content=content, session=self.session)
+        return Html(content=content)
