@@ -12,7 +12,7 @@ Strategy = module_member(STRATEGY)
 Storage = module_member(STORAGE)
 
 
-def load_strategy(request=None, requestData=None):
+def load_strategy(request=None, requestData=None, **kwargs):
     return get_strategy(STRATEGY, STORAGE, request, requestData=requestData)
 
 
