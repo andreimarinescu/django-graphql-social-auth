@@ -15,7 +15,7 @@ def get_backend(request, provider, **kwargs):
     strategy = load_strategy(request, **kwargs)
 
     try:
-        backend = load_backend(strategy, provider, redirect_uri=None)
+        backend = load_backend(strategy, provider, redirect_uri=kwargs.get('redirectUri'))
     except MissingBackend:
         raise exceptions.GraphQLSocialAuthError(_('Provider not found'))
     return backend
@@ -26,6 +26,7 @@ class AbstractSocialAuthMutation(graphene.Mutation):
         abstract = True
 
     class Arguments:
+        redirectUri = graphene.String(default=None) 
         provider = graphene.String(required=True)
 
     @classmethod
