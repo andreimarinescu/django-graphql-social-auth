@@ -26,7 +26,7 @@ class AbstractSocialAuthMutation(graphene.Mutation):
         abstract = True
 
     class Arguments:
-        redirectUri = graphene.String(default=None) 
+        redirectUri = graphene.String(default_value=None) 
         provider = graphene.String(required=True)
 
     @classmethod
