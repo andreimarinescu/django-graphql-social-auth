@@ -11,6 +11,14 @@ from social_core.utils import user_is_authenticated, \
 
 from . import exceptions, results
 
+def get_backend(request, provider, **kwargs):
+    strategy = load_strategy(request, **kwargs)
+
+    try:
+        backend = load_backend(strategy, provider, redirect_uri=None)
+    except MissingBackend:
+        raise exceptions.GraphQLSocialAuthError(_('Provider not found'))
+    return backend
                
 class AbstractSocialAuthMutation(graphene.Mutation):
 
@@ -21,19 +29,9 @@ class AbstractSocialAuthMutation(graphene.Mutation):
         provider = graphene.String(required=True)
 
     @classmethod
-    def get_backend(cls, request, provider, **kwargs):
-        strategy = load_strategy(request, **kwargs)
-
-        try:
-            backend = load_backend(strategy, provider, redirect_uri=None)
-        except MissingBackend:
-            raise exceptions.GraphQLSocialAuthError(_('Provider not found'))
-        return backend
-
-    @classmethod
     def mutate(cls, root, info, provider, **kwargs):
-        backend = cls.get_backend(info.context, provider, **kwargs)
-        return results.SocialAuthResult(result=backend.start())
+        backend = get_backend(info.context, provider, **kwargs)
+        return cls(result=backend.start())
 
 
 class AbstractSocialAuthCompleteMutation(graphene.Mutation):
@@ -42,19 +40,9 @@ class AbstractSocialAuthCompleteMutation(graphene.Mutation):
         abstract = True
 
     class Arguments:
-        providerData = graphene.JSONString(default_value={})
+        requestData = graphene.JSONString(default_value={})
         provider = graphene.String(required=True)
         # state = graphene.String(default_value=None)
-
-    @classmethod
-    def get_backend(cls, request, provider, **kwargs):
-        strategy = load_strategy(request, **kwargs)
-
-        try:
-            backend = load_backend(strategy, provider, redirect_uri=None)
-        except MissingBackend:
-            raise exceptions.GraphQLSocialAuthError(_('Provider not found'))
-        return backend
 
     @classmethod
     def do_login(cls, backend, user, social_user):
@@ -73,7 +61,7 @@ class AbstractSocialAuthCompleteMutation(graphene.Mutation):
 
     @classmethod
     def mutate(cls, root, info, provider, **kwargs):
-        backend = cls.get_backend(info.context, provider, **kwargs)
+        backend = get_backend(info.context, provider, **kwargs)
         
         # state = kwargs.get('state')
         # if state:
@@ -142,6 +130,52 @@ class AbstractSocialAuthCompleteMutation(graphene.Mutation):
             **kwargs))
 
 
+               
+class AbstractSocialAuthDisconnectMutation(graphene.Mutation):
+
+    class Meta:
+        abstract = True
+
+    class Arguments:
+        requestData = graphene.JSONString(default_value={})
+        provider = graphene.String(required=True)
+
+    @classmethod
+    def get_result(cls,
+            backend,
+            user,
+            is_disconnected,
+            **kwargs):
+        raise NotImplementedError('Implement in subclass')
+
+    @classmethod
+    def mutate(cls, root, info, provider, **kwargs):
+        backend = get_backend(info.context, provider, **kwargs)
+        user = info.context.user
+
+        is_disconnected = False
+
+        partial = partial_pipeline_data(backend, user, *args, **kwargs)
+        if partial:
+            if association_id and not partial.kwargs.get('association_id'):
+                partial.extend_kwargs({
+                    'association_id': association_id
+                })
+            response = backend.disconnect(*partial.args, **partial.kwargs)
+            # clean partial data after usage
+            backend.strategy.clean_partial_pipeline(partial.token)
+        else:
+            response = backend.disconnect(user=user, association_id=association_id,
+                                          *args, **kwargs)
+
+        if isinstance(response, dict):
+            is_disconnected = True
+        else:
+            return response
+
+        return cls(result=cls.get_result(backend, user, is_disconnected))
+
+
 class SocialAuth(AbstractSocialAuthMutation):
     """Social Auth Mutation"""
 
@@ -199,3 +233,16 @@ class SocialAuthJWTComplete(AbstractSocialAuthCompleteMutation):
             is_inactive_user = is_inactive_user,
             is_new = is_new,
             is_new_association = is_new_association)
+
+class SocialAuthDisconnect(AbstractSocialAuthDisconnectMutation):
+    """Social Auth Mutation"""
+
+    result = graphene.Field(results.SocialAuthDisconnectResult)
+
+    @classmethod
+    def get_result(cls,
+            backend,
+            user,
+            is_disconnected,
+            **kwargs):
+        return results.Disconnect(is_disconnected=is_disconnected)

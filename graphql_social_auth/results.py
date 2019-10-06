@@ -11,6 +11,10 @@ class Social(graphene.ObjectType):
     is_new_association = graphene.Boolean()
 
 
+class Disconnect(graphene.ObjectType):
+    is_disconnected = graphene.Boolean()
+
+
 class JWT(Social):
     token = graphene.String()
 
@@ -36,3 +40,9 @@ class SocialAuthCompleteResult(graphene.Union):
 class SocialAuthJWTCompleteResult(graphene.Union):
     class Meta:
         types = [JWT, Redirect, Html]
+
+
+class SocialAuthDisconnectResult(graphene.Union):
+    class Meta:
+        types = [Disconnect, Redirect, Html]
+
