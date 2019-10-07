@@ -41,6 +41,7 @@ class AbstractSocialAuthCompleteMutation(graphene.Mutation):
         abstract = True
 
     class Arguments:
+        redirectUri = graphene.String(default_value=None) 
         requestData = graphene.JSONString(default_value={})
         provider = graphene.String(required=True)
         # state = graphene.String(default_value=None)
