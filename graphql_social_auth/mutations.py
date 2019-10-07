@@ -100,7 +100,8 @@ class AbstractSocialAuthCompleteMutation(graphene.Mutation):
         is_inactive_user = False
         is_new_association = False
         is_successful_login = False
-
+        is_new = False
+        
         if is_authenticated:
             if user:
                 is_new_association = True
