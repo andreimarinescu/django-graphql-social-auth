@@ -70,6 +70,7 @@ class AbstractSocialAuthCompleteMutation(graphene.Mutation):
         print(state)
         if state:
             backend.strategy.session_set(backend.name + '_state', state)
+            backend.data.set('state', '*')
         
         data = backend.strategy.request_data()
         
