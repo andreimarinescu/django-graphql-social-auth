@@ -66,6 +66,8 @@ class AbstractSocialAuthCompleteMutation(graphene.Mutation):
         backend = get_backend(info.context, provider, **kwargs)
         
         state = kwargs.get('state')
+        print('loool')
+        print(state)
         if state:
             backend.strategy.session_set(backend.name + '_state', state)
         
