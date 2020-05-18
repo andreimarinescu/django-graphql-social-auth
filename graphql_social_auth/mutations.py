@@ -44,7 +44,6 @@ class AbstractSocialAuthCompleteMutation(graphene.Mutation):
         requestData = graphene.JSONString(default_value={})
         provider = graphene.String(required=True)
         redirectUri = graphene.String(required=True)
-#         state = graphene.String(default_value=None)
 
     @classmethod
     def do_login(cls, backend, user, social_user):
